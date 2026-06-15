@@ -1,4 +1,5 @@
 // Код для аналитики, последнее обновление 22.05.2026 9:00
+// test tag v1.0.2
 
 function ensureErrorPopupDiv() {
     let errorPopup = document.querySelector('#tilda-popup-for-error');
