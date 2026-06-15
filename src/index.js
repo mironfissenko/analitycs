@@ -423,7 +423,7 @@ export default class Analytics {
                 subButton.setAttribute('inert', "disabled");
                 form.setAttribute("animation", "false");
 
-                subButtonContainer.addEventListener("click", async function () {
+                subButtonContainer.addEventListener("click", async () => {
                     if (form.getAttribute("animation") == "false") {
                         const firstName = form.querySelector('input[name="name"]').value;
                         const lastName = form.querySelector('input[name="last name"]').value;
@@ -545,7 +545,7 @@ export default class Analytics {
     }
 
     changeResultHelper(){
-        window.addEventListener("phoneChange" , function(){
+        window.addEventListener("phoneChange" , () =>{
             this.phoneUpdater();
         });
 
