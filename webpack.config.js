@@ -6,17 +6,15 @@ module.exports = {
 
     entry: './src/index.js',
 
-
-
     output: {
-        filename: 'analytics.min.js',
+        filename: 'utils.min.js',
         path: path.resolve(__dirname, 'dist'),
         clean: true,
 
         library: {
-            name: 'Analytics',   // Имя переменной, которая появится в window (window.Analytics)
-            type: 'window',      // Куда именно экспортировать
-            export: 'default',   // Что экспортировать (экспорт по умолчанию)
+            name: 'Analytics',
+            type: 'window',
+            export: 'default',
         },
     },
 
@@ -25,9 +23,9 @@ module.exports = {
         minimizer: [
             new TerserPlugin({
                 terserOptions: {
-                    keep_classnames: true, // Сохраняет имена классов
-                    keep_fnames: true,     // Сохраняет имена функций и методов
-                    mangle: true,          // Все остальное (локальные переменные) сжимаем
+                    keep_classnames: true,
+                    keep_fnames: true,
+                    mangle: true,
                 },
             }),
         ],
