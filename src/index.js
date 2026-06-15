@@ -1,14 +1,14 @@
-export default class Analitycs {
+export default class Analytics {
     constructor(settings) {
-        if (!!Analitycs.instance) {
-            return Analitycs.instance;
+        if (!!Analytics.instance) {
+            return Analytics.instance;
         }
 
         this.settings = Object.assign({
 
         }, settings);
 
-        Analitycs.instance = this;
+        Analytics.instance = this;
         this.formSubmited = false;
         this.mainPhone = null;
 
