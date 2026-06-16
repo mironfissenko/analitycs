@@ -44,9 +44,9 @@ export default class Analytics {
     }
 
     showErrorMessage(type) {
-        var message = "An error occurred during form validation";
-
-        let container = this.ensureErrorPopupDiv(this.settings.popupSelector);
+        let message = "An error occurred during form validation";
+        let errorMessage = "";
+        let container = this.ensureErrorPopupDiv(this.settings.pop);
         if (!container) {
             console.warn("container '.t-form__errorbox-text.t-text.t-text_xs' not found.");
             return;
@@ -59,7 +59,7 @@ export default class Analytics {
 
         switch (type) {
             case 'email':
-                var errorMessage = document.querySelector("#emEmail");
+                errorMessage = document.querySelector("#emEmail");
                 if (errorMessage) {
                     errorMessage.style.display = "block";
                 } else {
@@ -82,7 +82,7 @@ export default class Analytics {
                 break;
 
             case 'phone':
-                var errorMessage = document.querySelector("#emPhone");
+                errorMessage = document.querySelector("#emPhone");
                 if (errorMessage) {
                     errorMessage.style.display = "block";
                 } else {
@@ -104,7 +104,7 @@ export default class Analytics {
                 break;
 
             default:
-                var errorMessage = document.querySelector("#emCustom");
+                errorMessage = document.querySelector("#emCustom");
                 if (errorMessage) {
                     errorMessage.textContent = type;
                     console.log("Custom Error message created: " + type);
@@ -157,27 +157,27 @@ export default class Analytics {
                 gaClientId = cookiesObj['_ga']
             }
 
-            var inputs1 = document.querySelectorAll("input[name='ga_client_id']");
+            let inputs1 = document.querySelectorAll("input[name='ga_client_id']");
             for (const input1 of inputs1) {
                 input1.value = gaClientId;
             }
 
-            var inputs2 = document.querySelectorAll("input[name='first_source']");
+            let inputs2 = document.querySelectorAll("input[name='first_source']");
             for (const input2 of inputs2) {
                 input2.value = localStorage.getItem('first_source');
             }
 
-            var inputs3 = document.querySelectorAll("input[name='first_landing_page']");
+            let inputs3 = document.querySelectorAll("input[name='first_landing_page']");
             for (const input3 of inputs3) {
                 input3.value = localStorage.getItem('first_landing_page');
             }
 
-            var inputs4 = document.querySelectorAll("input[name='first_medium']");
+            let inputs4 = document.querySelectorAll("input[name='first_medium']");
             for (const input4 of inputs4) {
                 input4.value = localStorage.getItem('first_medium');
             }
 
-            var inputs5 = document.querySelectorAll("input[name='session_source_medium']");
+            let inputs5 = document.querySelectorAll("input[name='session_source_medium']");
             for (const input5 of inputs5) {
                 input5.value = localStorage.getItem('session_source_medium');
             }
@@ -192,37 +192,37 @@ export default class Analytics {
                     console.log("Analytics recieved;");
                     // console.log(data);
 
-                    var inputs1 = document.querySelectorAll("input[name='Client_Ip']");
+                    let inputs1 = document.querySelectorAll("input[name='Client_Ip']");
                     for (const input1 of inputs1) {
                         input1.value = data.clientIp;
                     }
 
-                    var inputs2 = document.querySelectorAll("input[name='User_Agent']");
+                    let inputs2 = document.querySelectorAll("input[name='User_Agent']");
                     for (const input2 of inputs2) {
                         input2.value = data.userAgent;
                     }
 
-                    var inputs3 = document.querySelectorAll("input[name='Accept Language']");
+                    let inputs3 = document.querySelectorAll("input[name='Accept Language']");
                     for (const input3 of inputs3) {
                         input3.value = data.acceptLanguage;
                     }
 
-                    var inputs4 = document.querySelectorAll("input[name='Ip Region']");
+                    let inputs4 = document.querySelectorAll("input[name='Ip Region']");
                     for (const input4 of inputs4) {
                         input4.value = data.ipRegion;
                     }
 
-                    var inputs5 = document.querySelectorAll("input[name='Ip Country']");
+                    let inputs5 = document.querySelectorAll("input[name='Ip Country']");
                     for (const input5 of inputs5) {
                         input5.value = data.ipCountry;
                     }
 
-                    var inputs6 = document.querySelectorAll("input[name='Ip City']");
+                    let inputs6 = document.querySelectorAll("input[name='Ip City']");
                     for (const input6 of inputs6) {
                         input6.value = data.ipCity;
                     }
 
-                    var inputs7 = document.querySelectorAll(`input[type="hidden"][name="Cookies"]`);
+                    let inputs7 = document.querySelectorAll(`input[type="hidden"][name="Cookies"]`);
                     for (const input7 of inputs7) {
                         input7.value = JSON.stringify(getAllCookies());
                     }
@@ -236,7 +236,7 @@ export default class Analytics {
     }
 
     lastNameHelper(forms) {
-        for (var form of forms) {
+        for (let form of forms) {
             this.attachLastNameListener(form);
             form.setAttribute("analyticsTriggered", "false");
         }
@@ -244,7 +244,7 @@ export default class Analytics {
 
     getForms() {
         try {
-            var initForms = document.querySelectorAll('form');
+            let initForms = document.querySelectorAll('form');
             const resForms = [];
 
             for (const form of initForms) {
@@ -275,12 +275,12 @@ export default class Analytics {
         // console.log(pValue);
 
         if (pValue.charAt(1) === "0" && pInput.getAttribute("data-phonemask-iso") === "de") {
-            var rawValue = pValue.replace("(", "").replace(")", "").replace(" ", "").replace("-", "");
+            let rawValue = pValue.replace("(", "").replace(")", "").replace(" ", "").replace("-", "");
             while (rawValue.charAt(0) === "0") {
                 rawValue = rawValue.slice(1);
             }
 
-            var newPhoneValue = "("
+            let newPhoneValue = "("
             for (let i = 0; i <= rawValue.length; i++) {
                 newPhoneValue += rawValue.charAt(i);
 
@@ -357,7 +357,7 @@ export default class Analytics {
             form.setAttribute("animation", "true");
             console.log("Animation started;");
 
-            var subButton = form.querySelector("button[type='submit']");
+            let subButton = form.querySelector("button[type='submit']");
             const originalText = subButton.textContent;
             const frames = [
                 ".",
@@ -401,18 +401,18 @@ export default class Analytics {
             console.log("subValidation was called;");
             for (const form of forms) {
                 this.fuTilda(form);
-                var subButton = form.querySelector("button[type='submit']");
+                let subButton = form.querySelector("button[type='submit']");
 
-                var countryCode = form.querySelector("span[class='t-input-phonemask__select-code']");
-                var prevValue = countryCode.textContent.trim();
+                let countryCode = form.querySelector("span[class='t-input-phonemask__select-code']");
+                let prevValue = countryCode.textContent.trim();
 
-                var myObserver = new MutationObserver(function () {
+                let myObserver = new MutationObserver(function () {
                     const countryCodeNew = form.querySelector("span[class='t-input-phonemask__select-code']");
-                    var curValue = countryCodeNew.textContent.trim();
+                    let curValue = countryCodeNew.textContent.trim();
 
                     if (curValue != prevValue) {
                         console.log("countryCode change was detected;");
-                        var phoneField = form.querySelector('input[name="tildaspec-phone-part[]"]');
+                        let phoneField = form.querySelector('input[name="tildaspec-phone-part[]"]');
                         phoneField.value = "";
                         phoneField.innerHTML = "";
                         phoneField.textContent = "";
@@ -424,7 +424,7 @@ export default class Analytics {
 
                 myObserver.observe(countryCode, { childList: true, characterData: true, subtree: true });
 
-                var subButtonContainer = subButton.parentElement;
+                let subButtonContainer = subButton.parentElement;
                 subButtonContainer.style.cursor = "pointer";
 
                 subButton.setAttribute('inert', "disabled");
@@ -481,7 +481,7 @@ export default class Analytics {
                         }
 
                         this.startButtonAnimation(form);
-                        var validationResult = await this.phoneValidation(form);
+                        let validationResult = await this.phoneValidation(form);
 
 
                         console.log("Validation: ", validationResult);
@@ -510,7 +510,7 @@ export default class Analytics {
 
             const forms = this.getForms();
             for (const form of forms) {
-                var subButton = form.querySelector("button[type='submit']");
+                let subButton = form.querySelector("button[type='submit']");
                 subButton.setAttribute('inert', "enabled");
                 form.requestSubmit(form.querySelector("button[type='submit']"));
                 console.log("stopButtonAnimation was called;");
@@ -521,14 +521,14 @@ export default class Analytics {
     }
 
     changeResultText() {
-        var phone = this._mainPhone;
+        let phone = this._mainPhone;
 
         if (phone == null){
             console.warn("Phone Number was not found;");
         }
 
         console.log("changeResultText was called;");
-        var popup = document.getElementById("tildaformsuccesspopuptext");
+        let popup = document.getElementById("tildaformsuccesspopuptext");
         if (popup && popup != null) {
             let link = popup.querySelector('a[href="https://t.me/ICHBuddyBot"]');
             if (link && link != null){
@@ -542,9 +542,9 @@ export default class Analytics {
     }
 
     phoneUpdater(){
-        var pagePhones = document.querySelectorAll("input[name='Телефон']");
+        let pagePhones = document.querySelectorAll("input[name='Телефон']");
         for (const pagePhone of pagePhones){
-            var pValue = pagePhone.value;
+            let pValue = pagePhone.value;
             if(pValue && pValue != null){
                 this._mainPhone = "+" + pValue.replace(/\D/g, '');
             }
@@ -575,7 +575,7 @@ export default class Analytics {
 
             for (const link of popupLinks){
                 // console.log("Cursed PopUp found;");
-                var phoneLink = this._mainPhone;
+                let phoneLink = this._mainPhone;
                 link.href = "https://tg.pulse.is/ICHBuddyBot?start=682c86d992037dea7e02af12|phone_number="+phoneLink;
             }
         }, 300);
