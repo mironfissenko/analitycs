@@ -1,16 +1,23 @@
 export default class Analytics {
+    _formSubmitted = false;
+    _mainPhone = null;
     constructor(settings) {
         if (!!Analytics.instance) {
             return Analytics.instance;
         }
 
         this.settings = Object.assign({
+            "languange": "RU",
+            "popupSelector": "#tilda-popup-for-error",
+            "tgBaseLink": "https://t.me/ICHBuddyBot",
+            "platform": "Tilda",
+            "company": "ICH",
+            "apiUrl": "https://api.int.negentrix.com/",
 
         }, settings);
 
         Analytics.instance = this;
-        this.formSubmited = false;
-        this.mainPhone = null;
+
 
         return this;
     }
@@ -478,14 +485,14 @@ export default class Analytics {
 
 
                         console.log("Validation: ", validationResult);
-                        if (validationResult && !this.formSubmited) {
+                        if (validationResult && !this._formSubmitted) {
                             subButton.setAttribute('inert', "enabled");
                             // subButton.click();
-                            this.formSubmited = true;
+                            this._formSubmitted = true;
                             form.requestSubmit(form.querySelector("button[type='submit']"));
                             subButton.setAttribute('inert', "disabled");
                             setTimeout(() => {
-                                this.formSubmited = false;
+                                this._formSubmitted = false;
                             }, 2000);
                         } else {
                             this.showErrorMessage("Phone number is invalid");
@@ -514,7 +521,7 @@ export default class Analytics {
     }
 
     changeResultText() {
-        var phone = this.mainPhone;
+        var phone = this._mainPhone;
 
         if (phone == null){
             console.warn("Phone Number was not found;");
@@ -539,7 +546,7 @@ export default class Analytics {
         for (const pagePhone of pagePhones){
             var pValue = pagePhone.value;
             if(pValue && pValue != null){
-                this.mainPhone = "+" + pValue.replace(/\D/g, '');
+                this._mainPhone = "+" + pValue.replace(/\D/g, '');
             }
         }
     }
@@ -568,7 +575,7 @@ export default class Analytics {
 
             for (const link of popupLinks){
                 // console.log("Cursed PopUp found;");
-                var phoneLink = this.mainPhone;
+                var phoneLink = this._mainPhone;
                 link.href = "https://tg.pulse.is/ICHBuddyBot?start=682c86d992037dea7e02af12|phone_number="+phoneLink;
             }
         }, 300);
