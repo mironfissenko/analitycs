@@ -22,8 +22,8 @@ export default class Analytics {
         return this;
     }
 
-    ensureErrorPopupDiv() {
-        let errorPopup = document.querySelector('#tilda-popup-for-error');
+    ensureErrorPopupDiv(popupSelector) {
+        let errorPopup = document.querySelector(popupSelector);
 
         if (!errorPopup) {
             errorPopup = document.createElement('div');
@@ -46,7 +46,7 @@ export default class Analytics {
     showErrorMessage(type) {
         var message = "An error occurred during form validation";
 
-        let container = this.ensureErrorPopupDiv();
+        let container = this.ensureErrorPopupDiv(this.settings.popupSelector);
         if (!container) {
             console.warn("container '.t-form__errorbox-text.t-text.t-text_xs' not found.");
             return;
