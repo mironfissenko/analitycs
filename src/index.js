@@ -7,13 +7,13 @@ export default class Analytics {
         }
 
         this.settings = Object.assign({
-            "languange": "RU",
+            "language": "RU",
             "popupSelector": "#tilda-popup-for-error",
             "tgBaseLink": "https://t.me/ICHBuddyBot",
+            "tgPulseLink": "https://tg.pulse.is/ICHBuddyBot?start=682c86d992037dea7e02af12|phone_number=",
             "platform": "Tilda",
             "company": "ICH",
-            "apiUrl": "https://api.int.negentrix.com/",
-
+            "apiUrl": "https://api.int.negentrix.com",
         }, settings);
 
         Analytics.instance = this;
@@ -184,7 +184,7 @@ export default class Analytics {
 
             try {
                 if (form.getAttribute("analyticsTriggered") == "false") {
-                    const response = await fetch('https://api.int.itcareerhub.de/visitor/analytics');
+                    const response = await fetch(`${this.settings.apiUrl}/visitor/analytics`);
                     if (!response.ok) {
                         throw new Error(`Network response was not ok (status ${response.status})`);
                     }
@@ -323,7 +323,7 @@ export default class Analytics {
                 countryCodeIso: phoneMask
             };
 
-            const response = await fetch("https://api.int.itcareerhub.de/phone/validate", {
+            const response = await fetch(`${this.settings.apiUrl}/phone/validate`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -530,9 +530,9 @@ export default class Analytics {
         console.log("changeResultText was called;");
         let popup = document.getElementById("tildaformsuccesspopuptext");
         if (popup && popup != null) {
-            let link = popup.querySelector('a[href="https://t.me/ICHBuddyBot"]');
+            let link = popup.querySelector(`a[href="${this.settings.tgBaseLink}"]`);
             if (link && link != null){
-                link.href = "https://tg.pulse.is/ICHBuddyBot?start=682c86d992037dea7e02af12|phone_number="+phone;
+                link.href = this.settings.tgPulseLink+phone;
             }
             // popup.innerHTML = "<p>Спасибо за регистрацию! Пожалуйста, запустите Telegram-бота, чтобы подключиться к вебинару. Ссылка на подключение будет доступна только там</p><a style='color:#93b0ff;font-style: italic;text-decoration: none;cursor: pointer;' href='https://tg.pulse.is/DWWBuddyBot?start=6877a2d25791f9aa6800a3fe|phone_number="+phone+"'>START</a>";
             popup.id = "tildaformsuccesspopuptextOLD";
@@ -565,7 +565,7 @@ export default class Analytics {
             }
         }, 100);
 
-        const popupLinks = document.querySelectorAll('a[href="https://t.me/ICHBuddyBot"]');
+        const popupLinks = document.querySelectorAll(`a[href="${this.settings.tgBaseLink}"]`);
         for (const link of popupLinks){
             link.name = "cursedLink";
         }
@@ -576,7 +576,7 @@ export default class Analytics {
             for (const link of popupLinks){
                 // console.log("Cursed PopUp found;");
                 let phoneLink = this._mainPhone;
-                link.href = "https://tg.pulse.is/ICHBuddyBot?start=682c86d992037dea7e02af12|phone_number="+phoneLink;
+                link.href = this.settings.tgPulseLink+phoneLink;
             }
         }, 300);
     }
