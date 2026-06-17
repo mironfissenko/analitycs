@@ -12,6 +12,8 @@ export default class Analytics {
 
         Analytics.instance = this;
 
+        this.forms = this.getForms();
+
         return this;
     }
 
@@ -424,6 +426,8 @@ export default class Analytics {
             let initForms = document.querySelectorAll('form');
             const resForms = [];
 
+            // сделать кроссплатформенное обнаружение форм, не через tildaspec-phone-part.
+            // у нас есть еще webflow
             for (const form of initForms) {
                 const flag = (form.querySelector('input[name="email"]') !== null) && (form.querySelector('input[name="tildaspec-phone-part[]"]') !== null);
 
