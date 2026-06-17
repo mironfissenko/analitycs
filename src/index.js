@@ -1,28 +1,21 @@
+import defaultSettings from "./settings";
 export default class Analytics {
     _formSubmitted = false;
     _mainPhone = null;
+
     constructor(settings) {
         if (!!Analytics.instance) {
             return Analytics.instance;
         }
 
-        this.settings = Object.assign({
-            "language": "RU",
-            "popupSelector": "#tilda-popup-for-error",
-            "tgBaseLink": "https://t.me/ICHBuddyBot",
-            "tgPulseLink": "https://tg.pulse.is/ICHBuddyBot?start=682c86d992037dea7e02af12|phone_number=",
-            "platform": "Tilda",
-            "company": "ICH",
-            "apiUrl": "https://api.int.negentrix.com",
-        }, settings);
+        this.settings = Object.assign(defaultSettings, settings);
 
         Analytics.instance = this;
-
 
         return this;
     }
 
-    ensureErrorPopupDiv(popupSelector) {
+    _ensureErrorPopupDiv(popupSelector) {
         let errorPopup = document.querySelector(popupSelector);
 
         if (!errorPopup) {
@@ -43,91 +36,43 @@ export default class Analytics {
         return errorPopup.querySelector(".t-form__errorbox-text.t-text.t-text_xs");
     }
 
-    showErrorMessage(type) {
-        let message = "An error occurred during form validation";
-        let errorMessage = "";
-        let container = this.ensureErrorPopupDiv(this.settings.pop);
-        if (!container) {
+    _showErrorMessage(type = "custom", animationTimeout = 5000) {
+        let errorMessageContainer = this._ensureErrorPopupDiv(this.settings.popupSelector);
+        if (!errorMessageContainer) {
             console.warn("container '.t-form__errorbox-text.t-text.t-text_xs' not found.");
             return;
         }
 
-        let parentElement = container.parentElement;
-        container.style.display = "block";
+        let errorText = this.settings.errorMap[type].message[this.settings.language];
+
+        let parentElement = errorMessageContainer.parentElement;
+        errorMessageContainer.style.display = "block";
         parentElement.style.display = "block";
 
-
-        switch (type) {
-            case 'email':
-                errorMessage = document.querySelector("#emEmail");
-                if (errorMessage) {
-                    errorMessage.style.display = "block";
-                } else {
-                    errorMessage = document.createElement('p');
-                    errorMessage.id = "emEmail";
-                    message = "Please enter a valid email";
-                    errorMessage.textContent = message;
-                    errorMessage.className = "t-form__errorbox-item";
-                    errorMessage.style.display = "block";
-                    console.log("Error message created; type: " + type);
-                    container.appendChild(errorMessage);
-                }
-                setTimeout(() => {
-                    errorMessage.style.display = "none";
-                    container.style.display = "none";
-                    parentElement.style.display = "none";
-                }, 5000);
-
-                console.warn("Please enter a valid email");
-                break;
-
-            case 'phone':
-                errorMessage = document.querySelector("#emPhone");
-                if (errorMessage) {
-                    errorMessage.style.display = "block";
-                } else {
-                    errorMessage = document.createElement('p');
-                    errorMessage.id = "emPhone";
-                    message = "Please enter a valid Phone Number";
-                    errorMessage.textContent = message;
-                    errorMessage.className = "t-form__errorbox-item";
-                    errorMessage.style.display = "block";
-                    console.log("Error message created; type: " + type);
-                    container.appendChild(errorMessage);
-                }
-                setTimeout(() => {
-                    errorMessage.style.display = "none";
-                    container.style.display = "none";
-                    parentElement.style.display = "none";
-                }, 5000);
-                console.warn("Please enter a valid phone number");
-                break;
-
-            default:
-                errorMessage = document.querySelector("#emCustom");
-                if (errorMessage) {
-                    errorMessage.textContent = type;
-                    console.log("Custom Error message created: " + type);
-                    errorMessage.style.display = "block";
-                } else {
-                    errorMessage = document.createElement('p');
-                    errorMessage.id = "emCustom";
-                    message = type;
-                    errorMessage.textContent = message;
-                    errorMessage.className = "t-form__errorbox-item";
-                    errorMessage.style.display = "block";
-                    console.log("Custom Error message created: " + type);
-                    container.appendChild(errorMessage);
-                }
-                setTimeout(() => {
-                    errorMessage.style.display = "none";
-                    container.style.display = "none";
-                    parentElement.style.display = "none";
-                }, 5000);
+        let errorMessage = errorMessageContainer.querySelector('p');
+        if (errorMessage) {
+            errorMessage.style.display = "block";
+        } else {
+            errorMessage = document.createElement('p');
+            errorMessage.id = "emEmail";
+            errorMessage.className = "t-form__errorbox-item";
+            errorMessage.style.display = "block";
+            console.log("Error message created; type: " + type);
+            errorMessageContainer.appendChild(errorMessage);
         }
+
+        errorMessage.textContent = errorText;
+
+        setTimeout(() => {
+            errorMessage.style.display = "none";
+            errorMessageContainer.style.display = "none";
+            parentElement.style.display = "none";
+        }, animationTimeout);
+
+        console.warn(errorText);
     }
 
-    getAllCookies() {
+    _getAllCookies() {
         try {
             const cookiesObj = {};
             if (!document.cookie) return cookiesObj;
@@ -145,13 +90,13 @@ export default class Analytics {
 
     }
 
-    attachLastNameListener(form) {
+    _attachLastNameListener(form) {
         const lastNameField = form.querySelector('[name="email"]');
 
         lastNameField.addEventListener('change', async () => {
-            this.getMarketingData();
+            this._getMarketingData();
             let gaClientId = '';
-            let cookiesObj = this.getAllCookies();
+            let cookiesObj = this._getAllCookies();
 
             if (cookiesObj['_ga']) {
                 gaClientId = cookiesObj['_ga']
@@ -224,7 +169,7 @@ export default class Analytics {
 
                     let inputs7 = document.querySelectorAll(`input[type="hidden"][name="Cookies"]`);
                     for (const input7 of inputs7) {
-                        input7.value = JSON.stringify(getAllCookies());
+                        input7.value = JSON.stringify(this._getAllCookies());
                     }
 
                     form.setAttribute("analyticsTriggered", "true");
@@ -235,36 +180,7 @@ export default class Analytics {
         });
     }
 
-    lastNameHelper(forms) {
-        for (let form of forms) {
-            this.attachLastNameListener(form);
-            form.setAttribute("analyticsTriggered", "false");
-        }
-    }
-
-    getForms() {
-        try {
-            let initForms = document.querySelectorAll('form');
-            const resForms = [];
-
-            for (const form of initForms) {
-                const flag = (form.querySelector('input[name="email"]') !== null) && (form.querySelector('input[name="tildaspec-phone-part[]"]') !== null);
-
-                if (flag) {
-                    resForms.push(form);
-                }
-            }
-
-            console.log("Forms on the webpage: ", resForms.length);
-            return resForms;
-
-        } catch (e) {
-            console.log("Error at getForms: ", e);
-            return [];
-        }
-    }
-
-    phoneTracker(event) {
+    _phoneTracker(event) {
         console.log('Event in phoneHelper triggered;');
         const pInput = event.target;
         const pValue = pInput.value;
@@ -301,17 +217,7 @@ export default class Analytics {
         }
     }
 
-    phoneHelper() {
-        const phones = document.querySelectorAll('input[name="tildaspec-phone-part[]"]');
-        console.log('phoneHelper triggered;');
-
-        phones.forEach((phone) => {
-            phone.addEventListener('input', this.phoneTracker);
-            phone.addEventListener('paste', this.phoneTracker);
-        });
-    }
-
-    async phoneValidation(form) {
+    async _phoneValidation(form) {
         try {
             console.log("phoneValidation is triggered;");
             const phoneMask = form.querySelector(".t-input-phonemask__select-flag").getAttribute("data-phonemask-flag").trim();
@@ -340,7 +246,7 @@ export default class Analytics {
                 if (responseBody.phoneType !== "INVALID") {
                     return true;
                 } else {
-                    this.showErrorMessage("Phone number is invalid");
+                    this._showErrorMessage("phone_invalid");
                     return false;
                 }
             }
@@ -352,7 +258,7 @@ export default class Analytics {
         }
     }
 
-    startButtonAnimation(form) {
+    _startButtonAnimation(form) {
         try {
             form.setAttribute("animation", "true");
             console.log("Animation started;");
@@ -383,12 +289,12 @@ export default class Analytics {
         }
     }
 
-    stopButtonAnimation(form) {
+    _stopButtonAnimation(form) {
         form.setAttribute("animation", "false");
         console.log("Validation is not busy;");
     }
 
-    fuTilda(form) {
+    _fuTilda(form) {
         try {
             form.querySelector("input[name='Privacy Agreement']").required = true;
         } catch (error) {
@@ -396,11 +302,157 @@ export default class Analytics {
         }
     }
 
+    _changeResultText() {
+        let phone = this._mainPhone;
+
+        if (phone == null){
+            console.warn("Phone Number was not found;");
+        }
+
+        console.log("changeResultText was called;");
+        let popup = document.getElementById("tildaformsuccesspopuptext");
+        if (popup && popup != null) {
+            let link = popup.querySelector(`a[href="${this.settings.tgBaseLink}"]`);
+            if (link && link != null){
+                link.href = this.settings.tgPulseLink+phone;
+            }
+            // popup.innerHTML = "<p>Спасибо за регистрацию! Пожалуйста, запустите Telegram-бота, чтобы подключиться к вебинару. Ссылка на подключение будет доступна только там</p><a style='color:#93b0ff;font-style: italic;text-decoration: none;cursor: pointer;' href='https://tg.pulse.is/DWWBuddyBot?start=6877a2d25791f9aa6800a3fe|phone_number="+phone+"'>START</a>";
+            popup.id = "tildaformsuccesspopuptextOLD";
+        } else {
+            console.warn("PopUp not found;");
+        }
+    }
+
+    _phoneUpdater(){
+        let pagePhones = document.querySelectorAll("input[name='Телефон']");
+        for (const pagePhone of pagePhones){
+            let pValue = pagePhone.value;
+            if(pValue && pValue != null){
+                this._mainPhone = "+" + pValue.replace(/\D/g, '');
+            }
+        }
+    }
+
+    _getMarketingData() {
+        let medium = this._getMedium();
+        let source = this._getSource();
+
+        localStorage.setItem('session_source_medium', source + ' / ' + medium);
+        if (!document.cookie.split('; ').find(row => row.startsWith("isMarketingDataCollected" + '='))) {
+            document.cookie = 'isMarketingDataCollected=true';
+
+            localStorage.setItem('first_medium', this._getMedium());
+            localStorage.setItem('first_source', this._getSource());
+            localStorage.setItem('first_landing_page', window.location.href);
+        }
+    }
+
+    _getMedium() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const referrer = document.referrer;
+        let medium = 'direct';
+
+        if (urlParams.has('utm_medium')) {
+            medium = urlParams.get('utm_medium');
+        } else if (referrer) {
+            const refHost = new URL(referrer).hostname;
+
+            const searchEngines = ['google', 'yandex', 'bing', 'duckduckgo', 'yahoo'];
+            const isSearch = searchEngines.some(engine => refHost.includes(engine));
+
+            if (isSearch) {
+                medium = 'organic';
+            } else {
+                medium = 'referral';
+            }
+        }
+
+        return medium;
+    }
+
+    _getSource() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const referrer = document.referrer;
+
+        if (urlParams.has('utm_source')) return urlParams.get('utm_source');
+        if (referrer) return new URL(referrer).hostname;
+        return 'direct';
+    }
+
+    changeResultHelper(){
+        window.addEventListener("phoneChange" , () =>{
+            this._phoneUpdater();
+        });
+
+        const intervalId = setInterval(() => {
+            const popup = document.querySelector('#tildaformsuccesspopuptext');
+            if (popup) {
+                console.log("PopUp found;");
+                this._changeResultText();
+                clearInterval(intervalId);
+            }
+        }, 100);
+
+        const popupLinks = document.querySelectorAll(`a[href="${this.settings.tgBaseLink}"]`);
+        for (const link of popupLinks){
+            link.name = "cursedLink";
+        }
+
+        const intervalLink = setInterval(() => {
+            const popupLinks = document.querySelectorAll('a[name="cursedLink"]');
+
+            for (const link of popupLinks){
+                // console.log("Cursed PopUp found;");
+                let phoneLink = this._mainPhone;
+                link.href = this.settings.tgPulseLink+phoneLink;
+            }
+        }, 300);
+    }
+
+    phoneHelper() {
+        const phones = document.querySelectorAll('input[name="tildaspec-phone-part[]"]');
+        console.log('phoneHelper triggered;');
+
+        phones.forEach((phone) => {
+            phone.addEventListener('input', this._phoneTracker);
+            phone.addEventListener('paste', this._phoneTracker);
+        });
+    }
+
+    getForms() {
+        try {
+            let initForms = document.querySelectorAll('form');
+            const resForms = [];
+
+            for (const form of initForms) {
+                const flag = (form.querySelector('input[name="email"]') !== null) && (form.querySelector('input[name="tildaspec-phone-part[]"]') !== null);
+
+                if (flag) {
+                    resForms.push(form);
+                }
+            }
+
+            console.log("Forms on the webpage: ", resForms.length);
+            return resForms;
+
+        } catch (e) {
+            console.log("Error at getForms: ", e);
+            return [];
+        }
+    }
+
+    lastNameHelper(forms) {
+        for (let form of forms) {
+            this._attachLastNameListener(form);
+            form.setAttribute("analyticsTriggered", "false");
+        }
+    }
+
     subValidation(forms) {
         try {
             console.log("subValidation was called;");
             for (const form of forms) {
-                this.fuTilda(form);
+                this._fuTilda(form);
                 let subButton = form.querySelector("button[type='submit']");
 
                 let countryCode = form.querySelector("span[class='t-input-phonemask__select-code']");
@@ -438,18 +490,18 @@ export default class Analytics {
                         console.log(firstName,lastName);
 
                         if (!firstName || !lastName) {
-                            this.showErrorMessage("Please fill your Name and Surname");
+                            this._showErrorMessage("name_surname_missing");
                             console.warn("Name or surname is missing!");
-                            this.stopButtonAnimation(form);
+                            this._stopButtonAnimation(form);
                             console.log("stopButtonAnimation was called;");
                             return false;
                         }
 
                         const email = form.querySelector('input[name="email"]').value.trim();
                         if (!email) {
-                            this.showErrorMessage("Please fill in Email");
+                            this._showErrorMessage("email_missing");
                             console.warn("Email is missing!");
-                            this.stopButtonAnimation(form);
+                            this._stopButtonAnimation(form);
                             console.log("stopButtonAnimation was called;");
                             return false;
                         }
@@ -457,8 +509,8 @@ export default class Analytics {
                         const emailField = form.querySelector('input[name="email"]');
                         if (!emailField.checkValidity()) {
                             console.warn("Email is invalid!");
-                            this.showErrorMessage("Email is invalid");
-                            this.stopButtonAnimation(form);
+                            this._showErrorMessage("email_invalid");
+                            this._stopButtonAnimation(form);
                             console.log("stopButtonAnimation was called;");
                             return false;
                         }
@@ -466,22 +518,22 @@ export default class Analytics {
                         const phone = form.querySelector("input[name='tildaspec-phone-part[]']").getAttribute("data-phonemask-current");
                         if (!phone) {
                             console.warn("Phone Number is missing!");
-                            this.showErrorMessage("Please fill in Phone Number");
-                            this.stopButtonAnimation(form);
+                            this._showErrorMessage("phone_missing");
+                            this._stopButtonAnimation(form);
                             console.log("stopButtonAnimation was called;");
                             return false;
                         }
 
                         if (!form.checkValidity()) {
                             form.reportValidity();
-                            this.showErrorMessage("Please fill in all required fields");
-                            this.stopButtonAnimation(form);
+                            this._showErrorMessage("required_fields_missing");
+                            this._stopButtonAnimation(form);
                             console.log("stopButtonAnimation was called;");
                             return false;
                         }
 
-                        this.startButtonAnimation(form);
-                        let validationResult = await this.phoneValidation(form);
+                        this._startButtonAnimation(form);
+                        let validationResult = await this._phoneValidation(form);
 
 
                         console.log("Validation: ", validationResult);
@@ -495,14 +547,14 @@ export default class Analytics {
                                 this._formSubmitted = false;
                             }, 2000);
                         } else {
-                            this.showErrorMessage("Phone number is invalid");
+                            this._showErrorMessage("phone_invalid");
                         }
-                        this.stopButtonAnimation(form);
+                        this._stopButtonAnimation(form);
                         console.log("stopButtonAnimation was called;");
                     }
 
                     console.log("stopButtonAnimation was called;");
-                    this.stopButtonAnimation(form);
+                    this._stopButtonAnimation(form);
                 })
             }
         } catch (error) {
@@ -514,117 +566,10 @@ export default class Analytics {
                 subButton.setAttribute('inert', "enabled");
                 form.requestSubmit(form.querySelector("button[type='submit']"));
                 console.log("stopButtonAnimation was called;");
-                this.stopButtonAnimation(form);
+                this._stopButtonAnimation(form);
 
             }
         }
-    }
-
-    changeResultText() {
-        let phone = this._mainPhone;
-
-        if (phone == null){
-            console.warn("Phone Number was not found;");
-        }
-
-        console.log("changeResultText was called;");
-        let popup = document.getElementById("tildaformsuccesspopuptext");
-        if (popup && popup != null) {
-            let link = popup.querySelector(`a[href="${this.settings.tgBaseLink}"]`);
-            if (link && link != null){
-                link.href = this.settings.tgPulseLink+phone;
-            }
-            // popup.innerHTML = "<p>Спасибо за регистрацию! Пожалуйста, запустите Telegram-бота, чтобы подключиться к вебинару. Ссылка на подключение будет доступна только там</p><a style='color:#93b0ff;font-style: italic;text-decoration: none;cursor: pointer;' href='https://tg.pulse.is/DWWBuddyBot?start=6877a2d25791f9aa6800a3fe|phone_number="+phone+"'>START</a>";
-            popup.id = "tildaformsuccesspopuptextOLD";
-        } else {
-            console.warn("PopUp not found;");
-        }
-    }
-
-    phoneUpdater(){
-        let pagePhones = document.querySelectorAll("input[name='Телефон']");
-        for (const pagePhone of pagePhones){
-            let pValue = pagePhone.value;
-            if(pValue && pValue != null){
-                this._mainPhone = "+" + pValue.replace(/\D/g, '');
-            }
-        }
-    }
-
-    changeResultHelper(){
-        window.addEventListener("phoneChange" , () =>{
-            this.phoneUpdater();
-        });
-
-        const intervalId = setInterval(() => {
-            const popup = document.querySelector('#tildaformsuccesspopuptext');
-            if (popup) {
-                console.log("PopUp found;");
-                this.changeResultText();
-                clearInterval(intervalId);
-            }
-        }, 100);
-
-        const popupLinks = document.querySelectorAll(`a[href="${this.settings.tgBaseLink}"]`);
-        for (const link of popupLinks){
-            link.name = "cursedLink";
-        }
-
-        const intervalLink = setInterval(() => {
-            const popupLinks = document.querySelectorAll('a[name="cursedLink"]');
-
-            for (const link of popupLinks){
-                // console.log("Cursed PopUp found;");
-                let phoneLink = this._mainPhone;
-                link.href = this.settings.tgPulseLink+phoneLink;
-            }
-        }, 300);
-    }
-
-    getMarketingData() {
-        let medium = this.getMedium();
-        let source = this.getSource();
-
-        localStorage.setItem('session_source_medium', source + ' / ' + medium);
-        if (!document.cookie.split('; ').find(row => row.startsWith("isMarketingDataCollected" + '='))) {
-            document.cookie = 'isMarketingDataCollected=true';
-
-            localStorage.setItem('first_medium', this.getMedium());
-            localStorage.setItem('first_source', this.getSource());
-            localStorage.setItem('first_landing_page', window.location.href);
-        }
-    }
-
-    getMedium() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const referrer = document.referrer;
-        let medium = 'direct';
-
-        if (urlParams.has('utm_medium')) {
-            medium = urlParams.get('utm_medium');
-        } else if (referrer) {
-            const refHost = new URL(referrer).hostname;
-
-            const searchEngines = ['google', 'yandex', 'bing', 'duckduckgo', 'yahoo'];
-            const isSearch = searchEngines.some(engine => refHost.includes(engine));
-
-            if (isSearch) {
-                medium = 'organic';
-            } else {
-                medium = 'referral';
-            }
-        }
-
-        return medium;
-    }
-
-    getSource() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const referrer = document.referrer;
-
-        if (urlParams.has('utm_source')) return urlParams.get('utm_source');
-        if (referrer) return new URL(referrer).hostname;
-        return 'direct';
     }
 
     init() {
