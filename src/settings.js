@@ -1,5 +1,4 @@
 export default {
-    "language": "RU",
     "popupSelector": "#tilda-popup-for-error",
     "tgBaseLink": "https://t.me/ICHBuddyBot",
     "tgPulseLink": "https://tg.pulse.is/ICHBuddyBot?start=682c86d992037dea7e02af12|phone_number=",
@@ -56,6 +55,23 @@ export default {
                 "DE": "Beim Ausfüllen des Formulars ist ein Fehler aufgetreten"
             }
         },
-
+    },
+    "hiddenFields": {
+        "User_Agent": { "value": "", "type": "text", },
+        "Accept Language": { "value": "", "type": "text", },
+        "Ip Region": { "value": "", "type": "text", },
+        "Ip Country": { "value": "", "type": "text", },
+        "Ip City": { "value": "", "type": "text", },
+        "Cookies": { "value": "", "type": "text", },
+        "Client_Ip": { "value": "", "type": "text", },
+        "Preffered Contact Language": { "value": language, "type": "text",},
+        "Preffered Product": { "value": "General", "type": "text", },
+        "Newsletter Agreement Text": { "value": "Ich somthing...", "type": "text", },
+        "Privacy Agreement Id": { "value": "", "type": "text", },
+        "ga_client_id": { "value": "","type": "text", },
+        "first_source": { "value": "", "type": "text", },
+        "first_landing_page": { "value": "", "type": "text", },
+        "first_medium": { "value": "", "type": "text", },
+        "session_source_medium": { "value": "", "type": "text", },
     }
 }

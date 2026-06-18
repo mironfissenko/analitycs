@@ -3,18 +3,43 @@ export default class Analytics {
     _formSubmitted = false;
     _mainPhone = null;
 
-    constructor(settings) {
+    constructor(customSettings, language = 'RU') {
         if (!!Analytics.instance) {
             return Analytics.instance;
         }
 
-        this.settings = Object.assign(defaultSettings, settings);
+        this.language = language;
+
+        this.settings = Object.assign(defaultSettings, customSettings);
 
         Analytics.instance = this;
 
         this.forms = this.getForms();
 
         return this;
+    }
+
+    getHiddenField(name) {
+        return this.settings.hiddenFields[name];
+    }
+
+    setHiddenField(name, type = "text", value = "") {
+        this.settings.hiddenFields[name] = {value, type};
+    }
+
+    removeHiddenField(name) {
+        delete this.settings.hiddenFields[name];
+    }
+
+    insertHiddenFieldsInForms(hiddenFields) {
+        const forms = this.forms;
+        const fields = Object.entries(hiddenFields);
+        forms.forEach(form => {
+            fields.forEach(field => {
+                const inputHTML = `<input type="${field[1].type}" id="${field[0]}" name="${field[0]}" value="${field[1].value}" style="display: none" />`;
+                form.insertAdjacentHTML('beforeend', inputHTML);
+            });
+        })
     }
 
     _ensureErrorPopupDiv(popupSelector) {
@@ -45,7 +70,7 @@ export default class Analytics {
             return;
         }
 
-        let errorText = this.settings.errorMap[type].message[this.settings.language];
+        let errorText = this.settings.errorMap[type].message[this.language];
 
         let parentElement = errorMessageContainer.parentElement;
         errorMessageContainer.style.display = "block";
@@ -92,6 +117,14 @@ export default class Analytics {
 
     }
 
+    _inputInHiddenField(fieldName, fieldValue) {
+        let fields = document.querySelectorAll(`input[name='${fieldName}']`);
+        for (const field of fields) {
+            field.value = fieldValue;
+        }
+    }
+
+    // Подумать, на какое событие тоже лучше было бы повесить этот метод
     _attachLastNameListener(form) {
         const lastNameField = form.querySelector('[name="email"]');
 
@@ -104,30 +137,11 @@ export default class Analytics {
                 gaClientId = cookiesObj['_ga']
             }
 
-            let inputs1 = document.querySelectorAll("input[name='ga_client_id']");
-            for (const input1 of inputs1) {
-                input1.value = gaClientId;
-            }
-
-            let inputs2 = document.querySelectorAll("input[name='first_source']");
-            for (const input2 of inputs2) {
-                input2.value = localStorage.getItem('first_source');
-            }
-
-            let inputs3 = document.querySelectorAll("input[name='first_landing_page']");
-            for (const input3 of inputs3) {
-                input3.value = localStorage.getItem('first_landing_page');
-            }
-
-            let inputs4 = document.querySelectorAll("input[name='first_medium']");
-            for (const input4 of inputs4) {
-                input4.value = localStorage.getItem('first_medium');
-            }
-
-            let inputs5 = document.querySelectorAll("input[name='session_source_medium']");
-            for (const input5 of inputs5) {
-                input5.value = localStorage.getItem('session_source_medium');
-            }
+            this._inputInHiddenField("ga_client_id", gaClientId);
+            this._inputInHiddenField("first_source", localStorage.getItem('first_source'));
+            this._inputInHiddenField("first_landing_page", localStorage.getItem('first_landing_page'));
+            this._inputInHiddenField("first_medium", localStorage.getItem('first_medium'));
+            this._inputInHiddenField("session_source_medium", localStorage.getItem('session_source_medium'));
 
             try {
                 if (form.getAttribute("analyticsTriggered") == "false") {
@@ -139,40 +153,13 @@ export default class Analytics {
                     console.log("Analytics recieved;");
                     // console.log(data);
 
-                    let inputs1 = document.querySelectorAll("input[name='Client_Ip']");
-                    for (const input1 of inputs1) {
-                        input1.value = data.clientIp;
-                    }
-
-                    let inputs2 = document.querySelectorAll("input[name='User_Agent']");
-                    for (const input2 of inputs2) {
-                        input2.value = data.userAgent;
-                    }
-
-                    let inputs3 = document.querySelectorAll("input[name='Accept Language']");
-                    for (const input3 of inputs3) {
-                        input3.value = data.acceptLanguage;
-                    }
-
-                    let inputs4 = document.querySelectorAll("input[name='Ip Region']");
-                    for (const input4 of inputs4) {
-                        input4.value = data.ipRegion;
-                    }
-
-                    let inputs5 = document.querySelectorAll("input[name='Ip Country']");
-                    for (const input5 of inputs5) {
-                        input5.value = data.ipCountry;
-                    }
-
-                    let inputs6 = document.querySelectorAll("input[name='Ip City']");
-                    for (const input6 of inputs6) {
-                        input6.value = data.ipCity;
-                    }
-
-                    let inputs7 = document.querySelectorAll(`input[type="hidden"][name="Cookies"]`);
-                    for (const input7 of inputs7) {
-                        input7.value = JSON.stringify(this._getAllCookies());
-                    }
+                    this._inputInHiddenField("Client_Ip", data.clientIp);
+                    this._inputInHiddenField("User_Agent", data.userAgent);
+                    this._inputInHiddenField("Accept Language", data.acceptLanguage);
+                    this._inputInHiddenField("Ip Region", data.ipRegion);
+                    this._inputInHiddenField("Ip Country", data.ipCountry);
+                    this._inputInHiddenField("Ip City", data.ipCity);
+                    this._inputInHiddenField("Cookies", JSON.stringify(this._getAllCookies()));
 
                     form.setAttribute("analyticsTriggered", "true");
                 }
@@ -182,6 +169,7 @@ export default class Analytics {
         });
     }
 
+    // рефактор под две CMS
     _phoneTracker(event) {
         console.log('Event in phoneHelper triggered;');
         const pInput = event.target;
@@ -219,6 +207,7 @@ export default class Analytics {
         }
     }
 
+    // рефактор под две CMS
     async _phoneValidation(form) {
         try {
             console.log("phoneValidation is triggered;");
@@ -304,6 +293,7 @@ export default class Analytics {
         }
     }
 
+    // Рефактор в сторону добавления множества параметров для ссылки tg.pulse
     _changeResultText() {
         let phone = this._mainPhone;
 
@@ -326,7 +316,7 @@ export default class Analytics {
     }
 
     _phoneUpdater(){
-        let pagePhones = document.querySelectorAll("input[name='Телефон']");
+        let pagePhones = document.querySelectorAll("input[name='phone']");
         for (const pagePhone of pagePhones){
             let pValue = pagePhone.value;
             if(pValue && pValue != null){
@@ -411,6 +401,8 @@ export default class Analytics {
         }, 300);
     }
 
+    // Рефактор для двух CMS, а также подумать, на какое событие лучше повесить
+    // метод, чтобы в случае добавления новых атрибутов в tg.pulse они не пропадали.
     phoneHelper() {
         const phones = document.querySelectorAll('input[name="tildaspec-phone-part[]"]');
         console.log('phoneHelper triggered;');
@@ -452,11 +444,14 @@ export default class Analytics {
         }
     }
 
+    // Главный метод для валидации сабмита формы. Нужен аккуратный рефакторинг с учетом наличия двух CMS
     subValidation(forms) {
         try {
             console.log("subValidation was called;");
+
             for (const form of forms) {
                 this._fuTilda(form);
+                // вынести до myObserver в отдельную функцию с учетом двух CMS
                 let subButton = form.querySelector("button[type='submit']");
 
                 let countryCode = form.querySelector("span[class='t-input-phonemask__select-code']");
@@ -486,6 +481,8 @@ export default class Analytics {
                 subButton.setAttribute('inert', "disabled");
                 form.setAttribute("animation", "false");
 
+                // оптимизировать проверку полей и вынести повторяющийся код
+                // в отдельную функцию
                 subButtonContainer.addEventListener("click", async () => {
                     if (form.getAttribute("animation") == "false") {
                         const firstName = form.querySelector('input[name="name"]').value;
@@ -577,10 +574,10 @@ export default class Analytics {
     }
 
     init() {
-        const forms = this.getForms();
-        this.lastNameHelper(forms);
-        this.subValidation(forms);
+        this.lastNameHelper(this.forms);
+        this.subValidation(this.forms);
         this.phoneHelper();
         this.changeResultHelper();
+        this.insertHiddenFieldsInForms(this.settings.hiddenFields);
     }
 }
