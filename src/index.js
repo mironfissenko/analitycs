@@ -2,6 +2,7 @@ import defaultSettings from "./settings";
 export default class Analytics {
     _formSubmitted = false;
     _mainPhone = null;
+    _mainEmail = null;
 
     constructor(customSettings, language = 'RU') {
         if (!!Analytics.instance) {
@@ -9,12 +10,10 @@ export default class Analytics {
         }
 
         this.language = language;
-
         this.settings = Object.assign(defaultSettings, customSettings);
-
-        Analytics.instance = this;
-
         this.forms = this.getForms();
+        this.tgLinks = document.querySelectorAll(`a[href="${this.settings.tgBaseLink}"]`);
+        Analytics.instance = this;
 
         return this;
     }
@@ -29,6 +28,16 @@ export default class Analytics {
 
     removeHiddenField(name) {
         delete this.settings.hiddenFields[name];
+    }
+
+    _constructSendPulseLink (pulseValues = this.settings.tgPulseValues, urlBase = "https://tg.pulse.is/", botName = this.settings.tgBotName, pulseStart = this.settings.tgSendPulseStart) {
+        let link = urlBase + botName + "?start=" + pulseStart;
+
+        Object.entries(pulseValues).forEach(([key, value]) => {
+            link += `|${key}=${value}`;
+        });
+
+        return link;
     }
 
     insertHiddenFieldsInForms(hiddenFields) {
@@ -129,21 +138,20 @@ export default class Analytics {
         const lastNameField = form.querySelector('[name="email"]');
 
         lastNameField.addEventListener('change', async () => {
-            this._getMarketingData();
-            let gaClientId = '';
-            let cookiesObj = this._getAllCookies();
-
-            if (cookiesObj['_ga']) {
-                gaClientId = cookiesObj['_ga']
-            }
-
-            this._inputInHiddenField("ga_client_id", gaClientId);
-            this._inputInHiddenField("first_source", localStorage.getItem('first_source'));
-            this._inputInHiddenField("first_landing_page", localStorage.getItem('first_landing_page'));
-            this._inputInHiddenField("first_medium", localStorage.getItem('first_medium'));
-            this._inputInHiddenField("session_source_medium", localStorage.getItem('session_source_medium'));
-
             try {
+                this._getMarketingData();
+                let gaClientId = '';
+                let cookiesObj = this._getAllCookies();
+
+                if (cookiesObj['_ga']) {
+                    gaClientId = cookiesObj['_ga']
+                }
+
+                this._inputInHiddenField("ga_client_id", gaClientId);
+                this._inputInHiddenField("first_source", localStorage.getItem('first_source'));
+                this._inputInHiddenField("first_landing_page", localStorage.getItem('first_landing_page'));
+                this._inputInHiddenField("first_medium", localStorage.getItem('first_medium'));
+                this._inputInHiddenField("session_source_medium", localStorage.getItem('session_source_medium'));
                 if (form.getAttribute("analyticsTriggered") == "false") {
                     const response = await fetch(`${this.settings.apiUrl}/visitor/analytics`);
                     if (!response.ok) {
@@ -214,6 +222,7 @@ export default class Analytics {
             const phoneMask = form.querySelector(".t-input-phonemask__select-flag").getAttribute("data-phonemask-flag").trim();
             const phoneCode = form.querySelector(".t-input-phonemask__select-code").textContent.trim();
             const phoneNumber = (phoneCode + form.querySelector('[name="tildaspec-phone-part[]"]').getAttribute("data-phonemask-current").trim()).replace("(", "").replace(")", "").replace(" ", "").replace("-", "");
+            this._mainPhone = phoneNumber;
 
             const requestData = {
                 phone: phoneNumber,
@@ -293,38 +302,6 @@ export default class Analytics {
         }
     }
 
-    // Рефактор в сторону добавления множества параметров для ссылки tg.pulse
-    _changeResultText() {
-        let phone = this._mainPhone;
-
-        if (phone == null){
-            console.warn("Phone Number was not found;");
-        }
-
-        console.log("changeResultText was called;");
-        let popup = document.getElementById("tildaformsuccesspopuptext");
-        if (popup && popup != null) {
-            let link = popup.querySelector(`a[href="${this.settings.tgBaseLink}"]`);
-            if (link && link != null){
-                link.href = this.settings.tgPulseLink+phone;
-            }
-            // popup.innerHTML = "<p>Спасибо за регистрацию! Пожалуйста, запустите Telegram-бота, чтобы подключиться к вебинару. Ссылка на подключение будет доступна только там</p><a style='color:#93b0ff;font-style: italic;text-decoration: none;cursor: pointer;' href='https://tg.pulse.is/DWWBuddyBot?start=6877a2d25791f9aa6800a3fe|phone_number="+phone+"'>START</a>";
-            popup.id = "tildaformsuccesspopuptextOLD";
-        } else {
-            console.warn("PopUp not found;");
-        }
-    }
-
-    _phoneUpdater(){
-        let pagePhones = document.querySelectorAll("input[name='phone']");
-        for (const pagePhone of pagePhones){
-            let pValue = pagePhone.value;
-            if(pValue && pValue != null){
-                this._mainPhone = "+" + pValue.replace(/\D/g, '');
-            }
-        }
-    }
-
     _getMarketingData() {
         let medium = this._getMedium();
         let source = this._getSource();
@@ -369,36 +346,6 @@ export default class Analytics {
         if (urlParams.has('utm_source')) return urlParams.get('utm_source');
         if (referrer) return new URL(referrer).hostname;
         return 'direct';
-    }
-
-    changeResultHelper(){
-        window.addEventListener("phoneChange" , () =>{
-            this._phoneUpdater();
-        });
-
-        const intervalId = setInterval(() => {
-            const popup = document.querySelector('#tildaformsuccesspopuptext');
-            if (popup) {
-                console.log("PopUp found;");
-                this._changeResultText();
-                clearInterval(intervalId);
-            }
-        }, 100);
-
-        const popupLinks = document.querySelectorAll(`a[href="${this.settings.tgBaseLink}"]`);
-        for (const link of popupLinks){
-            link.name = "cursedLink";
-        }
-
-        const intervalLink = setInterval(() => {
-            const popupLinks = document.querySelectorAll('a[name="cursedLink"]');
-
-            for (const link of popupLinks){
-                // console.log("Cursed PopUp found;");
-                let phoneLink = this._mainPhone;
-                link.href = this.settings.tgPulseLink+phoneLink;
-            }
-        }, 300);
     }
 
     // Рефактор для двух CMS, а также подумать, на какое событие лучше повесить
@@ -446,6 +393,7 @@ export default class Analytics {
 
     // Главный метод для валидации сабмита формы. Нужен аккуратный рефакторинг с учетом наличия двух CMS
     subValidation(forms) {
+        // конкретно тут может быть проблема с safari, так как subValidation запускается сразу после инициализации объекта класса
         try {
             console.log("subValidation was called;");
 
@@ -515,6 +463,7 @@ export default class Analytics {
                             console.log("stopButtonAnimation was called;");
                             return false;
                         }
+                        this._mainEmail = emailField.value;
 
                         const phone = form.querySelector("input[name='tildaspec-phone-part[]']").getAttribute("data-phonemask-current");
                         if (!phone) {
@@ -540,6 +489,11 @@ export default class Analytics {
                         console.log("Validation: ", validationResult);
                         if (validationResult && !this._formSubmitted) {
                             subButton.setAttribute('inert', "enabled");
+                            this.tgLinks.forEach(link => {
+                                if (link && link != null){
+                                    link.href = this._constructSendPulseLink({"phone_number": this._mainPhone, "email": this._mainEmail});
+                                }
+                            });
                             // subButton.click();
                             this._formSubmitted = true;
                             form.requestSubmit(form.querySelector("button[type='submit']"));
@@ -577,7 +531,6 @@ export default class Analytics {
         this.lastNameHelper(this.forms);
         this.subValidation(this.forms);
         this.phoneHelper();
-        this.changeResultHelper();
         this.insertHiddenFieldsInForms(this.settings.hiddenFields);
     }
 }
